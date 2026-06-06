@@ -23,6 +23,50 @@ Assets/Plugins/WSA
 
 For HoloLens 2 deployment, build with `Release` and `ARM64`.
 
+## Automated Build Script
+
+The repository includes [build.py](build.py), a small Python build helper that restores NuGet packages and builds the Visual Studio solution without hard-coding a compiler or MSBuild path.
+
+Prerequisites:
+
+- Windows with Visual Studio 2019 or Visual Studio 2022.
+- Visual Studio C++ build tools, including the MSVC toolchain.
+- Universal Windows Platform development tools.
+- A Windows 10 SDK installed through Visual Studio. This project has also built successfully with newer Windows SDK versions.
+- Python 3 available from the command line as `python`.
+
+Run the default build from the repository root:
+
+```powershell
+python .\build.py
+```
+
+By default, this restores NuGet packages and builds:
+
+```text
+Release|ARM64
+```
+
+The script looks for `MSBuild.exe` in this order:
+
+1. The `MSBUILD_EXE` environment variable, if set.
+1. `MSBuild.exe` on `PATH`.
+1. Visual Studio's `vswhere.exe`, which is used to locate the latest installed Visual Studio MSBuild.
+
+Useful options:
+
+```powershell
+python .\build.py --no-restore
+python .\build.py --configuration Debug --platform x64
+python .\build.py -c Release -p ARM64 -s HL2DinoPlugin.sln
+```
+
+After a successful default build, the DLL and winmd are available under:
+
+```text
+ARM64/Release/HL2DinoPlugin/
+```
+
 ## Sensor Image Buffers
 
 The plugin exposes raw 16-bit buffers from the HoloLens 2 AHAT depth sensor.
