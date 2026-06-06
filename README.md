@@ -71,6 +71,26 @@ ARM64/Release/HL2DinoPlugin/
 
 The plugin exposes raw 16-bit buffers from the HoloLens 2 AHAT depth sensor.
 
+### `GetRawDepthImageBuffer()`
+
+`GetRawDepthImageBuffer()` returns a `UInt16[]` copy of the latest raw AHAT depth frame. Each element corresponds to one pixel in the 512 x 512 AHAT depth image, in row-major order.
+
+The values have the same meaning as `Get16BitDepthImageBuf()`:
+
+- `0`: no valid depth was returned for that pixel.
+- `1..4090`: valid depth in millimetres, as used by the tracking code.
+- `>4090`: treated by this project as invalid / wrap-around depth data for AHAT depth processing.
+
+This is the original raw-depth getter kept for compatibility with existing consumers. Use `Get16BitDepthImageBuf()` when you prefer the newer name that explicitly describes the 16-bit buffer.
+
+### `GetRawABImageBuffer()`
+
+`GetRawABImageBuffer()` returns a `UInt16[]` copy of the latest raw AHAT active-brightness frame. Each element corresponds to one pixel in the 512 x 512 AHAT image, in row-major order.
+
+The values have the same meaning as `Get16BitABImageBuf()`: they are infrared / active-brightness response intensities from the depth sensor, not distance values. Brighter IR-reflective regions usually produce larger values.
+
+This is the original raw active-brightness getter kept for compatibility with existing consumers. Use `Get16BitABImageBuf()` when you prefer the newer name that explicitly describes the 16-bit buffer.
+
 ### `Get16BitDepthImageBuf()`
 
 `Get16BitDepthImageBuf()` returns a `UInt16[]` copy of the latest raw AHAT depth frame. Each element corresponds to one pixel in the 512 x 512 AHAT depth image, in row-major order.
