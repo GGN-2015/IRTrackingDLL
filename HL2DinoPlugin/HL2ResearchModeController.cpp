@@ -5,6 +5,7 @@
 #include "Holo2IRTracker.h"
 #include "IRTrackerUtils.h"
 #include "Shiny.h"
+#include <array>
 
 extern "C"
 HMODULE LoadLibraryA(
@@ -270,6 +271,37 @@ namespace winrt::HL2DinoPlugin::implementation
         return tools2worldArr;
     }
 
+    com_array<double> HL2ResearchModeController::GetDepthToWorldMatrix()
+    {
+        std::lock_guard<std::mutex> l(m_imgMutex);
+        return com_array<double>(m_OutputDepthToWorldMatrix.begin(), m_OutputDepthToWorldMatrix.end());
+    }
+
+    com_array<double> HL2ResearchModeController::GetDepthPixelWorldCoordinate(float pixelX, float pixelY, uint16_t depthValue)
+    {
+        if (!m_pDepthCameraSensor || depthValue == 0 || depthValue > 4090) return com_array<double>();
+
+        float uv[2] = { pixelX, pixelY };
+        float xy[2] = { 0.0f, 0.0f };
+        if (FAILED(m_pDepthCameraSensor->MapImagePointToCameraUnitPlane(uv, xy))) return com_array<double>();
+
+        std::vector<double> depthToWorldData;
+        {
+            std::lock_guard<std::mutex> l(m_imgMutex);
+            if (m_OutputDepthToWorldMatrix.size() != 16) return com_array<double>();
+            depthToWorldData = m_OutputDepthToWorldMatrix;
+        }
+
+        Eigen::Map<const Eigen::Matrix<double, 4, 4, Eigen::ColMajor>> depthToWorld(depthToWorldData.data());
+        Eigen::Vector3d pointInDepth(static_cast<double>(xy[0]), static_cast<double>(xy[1]), 1.0);
+        pointInDepth.normalize();
+        pointInDepth *= static_cast<double>(depthValue) / 1000.0;
+
+        Eigen::Vector4d pointInWorld = depthToWorld * pointInDepth.homogeneous();
+        std::array<double, 3> outputPoint = { pointInWorld.x(), pointInWorld.y(), pointInWorld.z() };
+        return com_array<double>(outputPoint.begin(), outputPoint.end());
+    }
+
     com_array<uint16_t> HL2ResearchModeController::GetRawDepthImageBuffer()
     {
         std::lock_guard<std::mutex> l(m_imgMutex);
@@ -286,6 +318,27 @@ namespace winrt::HL2DinoPlugin::implementation
 
         com_array<UINT16> tempBuffer = com_array<UINT16>(m_RawABImgBuf, m_RawABImgBuf + m_depthBufferSize);
 
+        return tempBuffer;
+    }
+
+    com_array<uint16_t> HL2ResearchModeController::Get16BitDepthImageBuf()
+    {
+        std::lock_guard<std::mutex> l(m_imgMutex);
+        if (!m_RawDepthImgBuf) return com_array<UINT16>();
+        com_array<UINT16> tempBuffer = com_array<UINT16>(m_RawDepthImgBuf, m_RawDepthImgBuf + m_depthBufferSize);
+
+        m_RawDepthImageUpdated.store(false, std::memory_order_relaxed);
+        return tempBuffer;
+    }
+
+    com_array<uint16_t> HL2ResearchModeController::Get16BitABImageBuf()
+    {
+        std::lock_guard<std::mutex> l(m_imgMutex);
+        if (!m_RawABImgBuf) return com_array<UINT16>();
+
+        com_array<UINT16> tempBuffer = com_array<UINT16>(m_RawABImgBuf, m_RawABImgBuf + m_depthBufferSize);
+
+        m_RawABImageUpdated.store(false, std::memory_order_relaxed);
         return tempBuffer;
     }
 
@@ -427,6 +480,12 @@ namespace winrt::HL2DinoPlugin::implementation
                 eig_world2depth = eig_depthToWorld.inverse().eval();
                 PROFILE_END();
 
+                {
+                    std::lock_guard<std::mutex> l(pHL2ResearchMode->m_imgMutex);
+                    const auto* depthToWorldData = eig_depthToWorld.data();
+                    pHL2ResearchMode->m_OutputDepthToWorldMatrix.assign(depthToWorldData, depthToWorldData + 16);
+                }
+
                 bool StashTexThisFrame = true;
                 pHL2ResearchMode->m_toggleImgMutex.lock();
                 StashTexThisFrame = pHL2ResearchMode->m_stashSensorImgs;
@@ -480,6 +539,8 @@ namespace winrt::HL2DinoPlugin::implementation
 
                         pHL2ResearchMode->m_AB8BitImageUpdated.store(true, std::memory_order_relaxed);
                         pHL2ResearchMode->m_Depth8BitImageUpdated.store(true, std::memory_order_relaxed);
+                        pHL2ResearchMode->m_RawABImageUpdated.store(true, std::memory_order_relaxed);
+                        pHL2ResearchMode->m_RawDepthImageUpdated.store(true, std::memory_order_relaxed);
                     }
 
                     pDepthTexture.reset();

@@ -109,11 +109,23 @@ namespace winrt::HL2DinoPlugin::implementation
         //! are visible to the HL2, and 16 doubles describing the 4x4 pose matrix (column-major)
         com_array<double> GetTrackedToolsPoseMatrices();
 
+        //! Latest 4x4 matrix transforming depth-camera coordinates to the externally supplied world frame
+        com_array<double> GetDepthToWorldMatrix();
+
+        //! Computes a world-frame 3D point from a depth-image pixel and its raw depth value
+        com_array<double> GetDepthPixelWorldCoordinate(float pixelX, float pixelY, uint16_t depthValue);
+
         //! 16-bit raw buffer of the depth values obtained from the AHAT sensor
         com_array<uint16_t> GetRawDepthImageBuffer();
 
         //! 16-bit raw buffer of the active brightness / infrared response from the AHAT sensor
         com_array<uint16_t> GetRawABImageBuffer();
+
+        //! 16-bit raw depth image buffer
+        com_array<uint16_t> Get16BitDepthImageBuf();
+
+        //! 16-bit raw AB image buffer
+        com_array<uint16_t> Get16BitABImageBuf();
 
         //! 8-bit processed depth image buffer (thresholds values above 4090) with values linearly mapped to (0-255)
         com_array<uint8_t> Get8BitDepthImageBuf();
@@ -142,6 +154,9 @@ namespace winrt::HL2DinoPlugin::implementation
              //! Encoded double array which is updated once a frame to reflect which tools are visible
              //! to the HL2
              std::vector <double> m_OutputToolPoseVector;
+
+             //! Latest depth-camera to world-frame transform, stored as 16 column-major doubles
+             std::vector<double> m_OutputDepthToWorldMatrix;
 
              //! Static implementation of the depth sensor loop function
              /*! @param pHL2ResearchMode Pass in the active instance of the @ref HL2ResearchMode class */

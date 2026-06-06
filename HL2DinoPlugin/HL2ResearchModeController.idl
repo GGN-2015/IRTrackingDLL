@@ -19,9 +19,14 @@ runtimeclass HL2ResearchModeController
         Boolean AB8BitImageUpdated();
 
         Double[] GetTrackedToolsPoseMatrices();
+        Double[] GetDepthToWorldMatrix();
+        Double[] GetDepthPixelWorldCoordinate(Single pixelX, Single pixelY, UInt16 depthValue);
 
         UInt16[] GetRawDepthImageBuffer();
         UInt16[] GetRawABImageBuffer();
+
+        UInt16[] Get16BitDepthImageBuf();
+        UInt16[] Get16BitABImageBuf();
 
         UInt8[] Get8BitDepthImageBuf();
         UInt8[] Get8BitABImageBuf();
