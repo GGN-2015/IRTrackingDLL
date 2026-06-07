@@ -13,7 +13,7 @@ ARM64/Release/HL2DinoPlugin/
 The two files normally needed by a Unity C# project are:
 
 - `HL2DinoPlugin.dll`: the native C++/WinRT implementation. It contains the Research Mode access, IR image processing, tool tracking logic, and the exported runtime class implementation.
-- `HL2DinoPlugin.winmd`: the Windows Metadata file. C# / Unity uses this metadata to discover the WinRT class and callable methods, such as `Get16BitDepthImageBuf()`, `Get16BitABImageBuf()`, `GetDepthToWorldMatrix()`, and `GetDepthPixelWorldCoordinate(...)`.
+- `HL2DinoPlugin.winmd`: the Windows Metadata file. C# / Unity uses this metadata to discover the WinRT class and callable methods, such as `Get16BitDepthImageBuf()`, `Get16BitABImageBuf()`, `GetDepthToWorldMatrix()`, `MapImagePointToCameraUnitPlane(...)`, and `GetDepthPixelWorldCoordinate(...)`.
 
 For Unity, copy the generated `.dll` and `.winmd` into:
 
@@ -136,6 +136,18 @@ This transform is built from:
 1. The reference coordinate system previously supplied through `SetReferenceCoordinateSystem(...)`, or the default stationary frame if none was supplied.
 
 Use this interface when Unity or another consumer needs to transform raw depth-camera points into the same world frame used by the plugin's tracking output.
+
+### `MapImagePointToCameraUnitPlane(Single pixelX, Single pixelY)`
+
+`MapImagePointToCameraUnitPlane(...)` exposes Research Mode's AHAT depth-camera pixel unprojection directly through the WinRT component. It returns a `Single[]` containing two values:
+
+```text
+[x, y]
+```
+
+The returned values describe the input pixel on the depth camera's unit plane, where the corresponding camera-space ray is `[x, y, 1]`. This is useful when a Unity or C# consumer wants to perform its own depth-camera ray or 3D point calculation.
+
+The method returns an empty array if the depth camera has not been initialized or if Research Mode cannot map the supplied pixel.
 
 ### `GetDepthPixelWorldCoordinate(Single pixelX, Single pixelY, UInt16 depthValue)`
 

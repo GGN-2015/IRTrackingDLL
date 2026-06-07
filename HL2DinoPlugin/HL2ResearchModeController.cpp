@@ -277,6 +277,18 @@ namespace winrt::HL2DinoPlugin::implementation
         return com_array<double>(m_OutputDepthToWorldMatrix.begin(), m_OutputDepthToWorldMatrix.end());
     }
 
+    com_array<float> HL2ResearchModeController::MapImagePointToCameraUnitPlane(float pixelX, float pixelY)
+    {
+        if (!m_pDepthCameraSensor) return com_array<float>();
+
+        float uv[2] = { pixelX, pixelY };
+        float xy[2] = { 0.0f, 0.0f };
+        if (FAILED(m_pDepthCameraSensor->MapImagePointToCameraUnitPlane(uv, xy))) return com_array<float>();
+
+        std::array<float, 2> outputPoint = { xy[0], xy[1] };
+        return com_array<float>(outputPoint.begin(), outputPoint.end());
+    }
+
     com_array<double> HL2ResearchModeController::GetDepthPixelWorldCoordinate(float pixelX, float pixelY, uint16_t depthValue)
     {
         if (!m_pDepthCameraSensor || depthValue == 0 || depthValue > 4090) return com_array<double>();

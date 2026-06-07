@@ -20,6 +20,7 @@ runtimeclass HL2ResearchModeController
 
         Double[] GetTrackedToolsPoseMatrices();
         Double[] GetDepthToWorldMatrix();
+        Single[] MapImagePointToCameraUnitPlane(Single pixelX, Single pixelY);
         Double[] GetDepthPixelWorldCoordinate(Single pixelX, Single pixelY, UInt16 depthValue);
 
         UInt16[] GetRawDepthImageBuffer();

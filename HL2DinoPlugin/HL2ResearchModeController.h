@@ -112,6 +112,9 @@ namespace winrt::HL2DinoPlugin::implementation
         //! Latest 4x4 matrix transforming depth-camera coordinates to the externally supplied world frame
         com_array<double> GetDepthToWorldMatrix();
 
+        //! Maps a depth image pixel to the AHAT camera unit plane using the Research Mode API
+        com_array<float> MapImagePointToCameraUnitPlane(float pixelX, float pixelY);
+
         //! Computes a world-frame 3D point from a depth-image pixel and its raw depth value
         com_array<double> GetDepthPixelWorldCoordinate(float pixelX, float pixelY, uint16_t depthValue);
 
